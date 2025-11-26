@@ -48,7 +48,7 @@ async def collect_metrics() -> CurrentMetrics:
                 """)
         committed_percent = 0.0
         if activity and activity["total"] > 0:
-            commited_percent = round((activity["active"] / activity["total"]) * 100, 1)
+            committed_percent = round((activity["active"] / activity["total"]) * 100, 1)
 
         connections = await conn.fetchval("SELECT count(*) FROM pg_stat_activity WHERE state = 'active'")
 
