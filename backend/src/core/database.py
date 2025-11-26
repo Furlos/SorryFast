@@ -36,23 +36,27 @@ class Database:
             print("Пул подключений закрыт")
 
     async def _ensure_extensions(self) -> None:
-        """Включаем pg_stat_statements - без него нет метрик"""
+        """Включаем pg_stat_statements и при необходимости прописываем в shared_preload_libraries"""
         async with self.pool.acquire() as conn:
-            await conn.execute("""
-                CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-                -- Чтобы статистика собиралась после рестарта
-                DO $$
-                BEGIN
-                    IF NOT (
-                        SELECT setting FROM pg_settings 
-                        WHERE name = 'shared_preload_libraries' 
-                        AND setting LIKE '%pg_stat_statements%'
-                    ) THEN
-                        ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
-                        RAISE NOTICE 'Добавлено pg_stat_statements в shared_preload_libraries. Перезапустите сервер!';
-                    END IF;
-                END $$;
-            """)
+            # Просто создаём расширение — оно безопасно, если уже есть
+            await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements;")
+
+            # Проверяем, есть ли уже pg_stat_statements в shared_preload_libraries
+            row = await conn.fetchrow(
+                "SELECT setting FROM pg_settings WHERE name = 'shared_preload_libraries'"
+            )
+
+            current_libs = row["setting"] if row and row["setting"] else ""
+
+            if "pg_stat_statements" not in current_libs:
+                # Если пусто — просто добавляем, если что-то уже есть — через запятую
+                new_value = "pg_stat_statements" if not current_libs else current_libs + ",pg_stat_statements"
+
+                await conn.execute(f"ALTER SYSTEM SET shared_preload_libraries = '{new_value}';")
+                print("pg_stat_statements добавлен в shared_preload_libraries")
+                print("Для применения нужен рестарт PostgreSQL (на проде — через orchestrator)")
+            else:
+                print("pg_stat_statements уже прописан в shared_preload_libraries")
 
     @asynccontextmanager
     async def acquire(self) -> AsyncGenerator[asyncpg.Connection, None]:
