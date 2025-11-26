@@ -40,6 +40,12 @@ async def read_intensive_work():
     except:
         raise HTTPException(status_code=500, detail="Something went wrong")
 
+@models_router.get("/write_intensive_work")
+async def write_intensive_work():
+    try:
+        return "Тут костыль"
+    except:
+        raise HTTPException(status_code=500, detail="Something went wrong")
 
 @models_router.get("/web_work")
 async def web_work():
