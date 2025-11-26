@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: workload_analyzer
+      POSTGRES_USER: analyzer_user
+      POSTGRES_PASSWORD: analyzer_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - analyzer-network
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://analyzer_user:analyzer_password@postgres:5432/workload_analyzer
+      API_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    networks:
+      - analyzer-network
+
+  tg-bot:
+    build: ./tg-bot
+    environment:
+      BOT_TOKEN: your_telegram_bot_token_here
+      API_BASE_URL: http://backend:8000/api
+    depends_on:
+      - backend
+    networks:
+      - analyzer-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  analyzer-network:
