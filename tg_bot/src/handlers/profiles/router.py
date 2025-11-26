@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
-from .keyboards import back_to_main_kb
-from .api import (
+from keyboards import back_to_main_kb
+from api import (
     analyze_oltp_workload,
     analyze_olap_workload,
     analyze_mixed_workload,
