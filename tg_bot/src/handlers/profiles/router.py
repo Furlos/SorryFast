@@ -2,29 +2,22 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from keyboards import back_to_main_kb
 from api import (
-    analyze_oltp_workload,
-    analyze_olap_workload,
-    analyze_mixed_workload,
-    analyze_iot_workload,
-    analyze_read_intensive_workload,
-    analyze_write_intensive_workload,
-    analyze_web_service_workload,
-    analyze_batch_workload
+    ProfileAPIClient
 )
-
+from ...config import backend_link
+api = ProfileAPIClient(backend_link)
 profile_router = Router()
 
 
 @profile_router.callback_query(F.data == "workload_oltp")
 async def handle_oltp(callback: CallbackQuery):
     """Обработчик для OLTP"""
-    api_result = await analyze_oltp_workload("SELECT * FROM transactions WHERE user_id = 123")
 
     description = f"""
 ⚡ **OLTP (Online Transaction Processing)**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+
+**Данные: {api.oltp_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 85-95% (короткие транзакции)
@@ -66,13 +59,10 @@ async def handle_oltp(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_olap")
 async def handle_olap(callback: CallbackQuery):
     """Обработчик для OLAP"""
-    api_result = await analyze_olap_workload("SELECT department, AVG(salary) FROM employees GROUP BY department")
-
     description = f"""
 📈 **OLAP (Online Analytical Processing)**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.olap_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 40-50% (длительные операции)
@@ -115,14 +105,11 @@ async def handle_olap(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_mixed")
 async def handle_mixed(callback: CallbackQuery):
     """Обработчик для смешанной нагрузки"""
-    api_result = await analyze_mixed_workload(
-        "SELECT user_id, COUNT(*) FROM orders WHERE created_at > NOW() - INTERVAL '1 hour' GROUP BY user_id")
 
     description = f"""
 🔄 **Смешанный (Mixed OLTP/OLAP)**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.mixed_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 60-70%
@@ -162,14 +149,11 @@ async def handle_mixed(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_iot")
 async def handle_iot(callback: CallbackQuery):
     """Обработчик для IoT/Телеметрии"""
-    api_result = await analyze_iot_workload(
-        "INSERT INTO sensor_data (sensor_id, value, timestamp) VALUES (1, 25.5, NOW())")
 
     description = f"""
 🌐 **IoT/Телеметрия**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.iot_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 90-95% (массовая запись)
@@ -210,14 +194,11 @@ async def handle_iot(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_read_intensive")
 async def handle_read_intensive(callback: CallbackQuery):
     """Обработчик для Read-Intensive"""
-    api_result = await analyze_read_intensive_workload(
-        "SELECT * FROM products WHERE category = 'electronics' AND price < 1000")
 
     description = f"""
 📖 **Read-Intensive (Чтение)**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.read_intensive_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 70-80% (операции чтения)
@@ -258,14 +239,10 @@ async def handle_read_intensive(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_write_intensive")
 async def handle_write_intensive(callback: CallbackQuery):
     """Обработчик для Write-Intensive"""
-    api_result = await analyze_write_intensive_workload(
-        "INSERT INTO audit_log (user_id, action, timestamp) VALUES (456, 'login', NOW())")
-
     description = f"""
 ✍️ **Write-Intensive (Запись)**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.write_intensive_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 85-95% (операции записи)
@@ -306,13 +283,11 @@ async def handle_write_intensive(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_web_service")
 async def handle_web_service(callback: CallbackQuery):
     """Обработчик для интерактивного веб-сервиса"""
-    api_result = await analyze_web_service_workload("SELECT username, email FROM users WHERE id = 789")
 
     description = f"""
 💻 **Интерактивный веб-сервис**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.web_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 80-90% (высокая конкурентность)
@@ -353,14 +328,11 @@ async def handle_web_service(callback: CallbackQuery):
 @profile_router.callback_query(F.data == "workload_batch")
 async def handle_batch(callback: CallbackQuery):
     """Обработчик для пакетной обработки"""
-    api_result = await analyze_batch_workload(
-        "UPDATE users SET last_active = NOW() WHERE last_active < NOW() - INTERVAL '30 days'")
 
     description = f"""
 ⚙️ **Пакетная обработка (Batch Processing)**
 
-**API: {api_result['api_name']}**
-**Данные: {api_result['data']}**
+**Данные: {api.batch_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 50-70% (длительные операции)
