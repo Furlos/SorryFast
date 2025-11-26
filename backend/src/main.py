@@ -37,9 +37,9 @@ async def debug_metrics():
     }
 
 
-@app.get("/profile/{profile_name}")
+@app.get("/profile/{base_name}")
 async def current_profile(db: str = Query("prodbill01", description="Имя базы")):
-    # Находим профиль по имени базы (как в демо-боте)
+    # Находим профиль по имени базы
     demo_map = {
         "prodbill01": "Financial-Safe OLTP",
         "analytics01": "Analytical OLAP",
@@ -54,7 +54,7 @@ async def current_profile(db: str = Query("prodbill01", description="Имя ба
     profile_name = demo_map.get(db.split()[0], demo_map["default"])
     profile = next(p for p in PROFILES if p.name == profile_name)
 
-    # Генерируем ЖИВЫЕ фейковые метрики — каждый запрос новые!
+    # Генерируем ЖИВЫЕ фейковые метрики, каждый запрос новые
     metrics = generate_fake_metrics(profile_name)
 
     return {
