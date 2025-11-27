@@ -29,7 +29,7 @@ async def collect_metrics() -> CurrentMetrics:
                 "tps": 0.0,
                 "wal_mb_per_sec": 0.0,
                 "temp_gb_per_hour": 0.0,
-                "committed_percent": 0.0,
+                "commited_percent": 0.0,
                 "active_connections": 0,
                 "top_wait_event": "нет данных"
             }
