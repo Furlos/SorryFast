@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException
-
+from profiles.oltp_operations import generate_oltp_report
+from core.database import db
 models_router = APIRouter()
 @models_router.get("/oltp_work")
 async def oltp_work():
     try:
-        return "Тут костыль"
+        return generate_oltp_report(db)
     except:
         raise HTTPException(status_code=500, detail="Something went wrong")
 
