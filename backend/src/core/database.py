@@ -4,8 +4,7 @@ import asyncpg
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 import random
-import asyncio
-from faker import Faker
+from datetime import datetime, timedelta
 
 from .config import settings
 
@@ -13,7 +12,6 @@ from .config import settings
 class Database:
     def __init__(self):
         self.pool: asyncpg.Pool | None = None
-        self.fake = Faker()
 
     async def create_pool(self) -> None:
         """Создаём пул при старте приложения"""
@@ -72,45 +70,31 @@ class Database:
 
             print(f"Начинаем заполнение базы данных... Текущее количество записей: {count}")
 
-            # Удаляем старые данные если их меньше нужного количества
-            if count > 0:
-                await connection.execute("DELETE FROM users")
-                print("Старые данные удалены")
+            # Если данных мало, заполняем
+            if count < 100000:
+                # Просто создаем минимальные данные для тестов
+                print("Создаем тестовые данные...")
 
-            # Заполняем базу пачками по 1000 записей
-            batch_size = 1000
-            total_records = 100000
-            inserted = 0
-
-            for batch_start in range(0, total_records, batch_size):
-                batch_end = min(batch_start + batch_size, total_records)
+                # Быстрое заполнение 1000 записей для тестов
                 batch_data = []
-
-                for i in range(batch_start, batch_end):
-                    name = self.fake.first_name()
-                    surname = self.fake.last_name()
-                    email = f"{name.lower()}.{surname.lower()}{i}@example.com"
-                    phone = self.fake.phone_number()[:20]
+                for i in range(1000):
+                    name = f"User{i}"
+                    surname = f"Test{i}"
+                    email = f"user{i}@test.com"
+                    phone = f"+7999{str(i).zfill(7)}"
                     money = round(random.uniform(0, 10000), 2)
-                    created_at = self.fake.date_time_between(start_date='-2 years', end_date='now')
 
-                    batch_data.append((
-                        name, surname, email, phone, money, created_at
-                    ))
+                    batch_data.append((name, surname, email, phone, money))
 
-                # Вставляем пачку данных
                 await connection.executemany(
                     """
-                    INSERT INTO users (name, surname, email, phone, money, created_at)
-                    VALUES ($1, $2, $3, $4, $5, $6)
+                    INSERT INTO users (name, surname, email, phone, money)
+                    VALUES ($1, $2, $3, $4, $5)
                     """,
                     batch_data
                 )
 
-                inserted += len(batch_data)
-                print(f"Добавлено {inserted}/{total_records} записей")
-
-            print(f"База данных заполнена! Всего записей: {inserted}")
+                print(f"Создано 1000 тестовых записей")
 
     async def get_user_count(self) -> int:
         """Получить количество пользователей"""
