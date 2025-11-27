@@ -14,23 +14,16 @@ async def lifespan(app: FastAPI):
     """Lifespan контекст для управления состоянием приложения"""
     print("Запуск приложения...")
 
-    # Ждем пока PostgreSQL полностью запустится
-    max_retries = 10
-    retry_delay = 3
+    # Ждем 10 секунд перед подключением к PostgreSQL
+    print("⏳ Ожидание запуска PostgreSQL...")
+    await asyncio.sleep(10)
 
-    for attempt in range(max_retries):
-        try:
-            await db.create_pool()
-            print("✅ Подключение к PostgreSQL успешно установлено")
-            break
-        except Exception as e:
-            if attempt < max_retries - 1:
-                print(f"⚠️ Попытка подключения {attempt + 1}/{max_retries} не удалась: {e}")
-                print(f"🕒 Повторная попытка через {retry_delay} секунд...")
-                await asyncio.sleep(retry_delay)
-            else:
-                print(f"❌ Не удалось подключиться к PostgreSQL после {max_retries} попыток")
-                raise
+    try:
+        await db.create_pool()
+        print("✅ Подключение к PostgreSQL успешно установлено")
+    except Exception as e:
+        print(f"❌ Ошибка подключения к PostgreSQL: {e}")
+        raise
 
     print("✅ Пул подключений готов")
     yield
@@ -67,7 +60,6 @@ async def root():
 async def health_check():
     """Проверка здоровья приложения"""
     try:
-        # Проверяем подключение к базе данных
         user_count = await db.get_user_count()
         return {
             "status": "healthy",

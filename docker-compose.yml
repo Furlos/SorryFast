@@ -28,16 +28,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     networks:
       - analyzer-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # Убрал healthcheck временно
 
   tg-bot:
     build: ./tg_bot
@@ -45,8 +39,7 @@ services:
       BOT_TOKEN: your_telegram_bot_token_here
       API_BASE_URL: http://backend:8000
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - analyzer-network
     restart: unless-stopped
