@@ -64,6 +64,6 @@ async def collect_metrics() -> CurrentMetrics:
             "tps": round(tps, 1),
             "wal_mb_per_sec": round(wal_mb_per_sec, 2),
             "temp_gb_per_hour": round(temp_gb_per_hour, 2),
-            "committed_percent": committed_percent,
+            "commited_percent": committed_percent,
             "active_connections": int(connections or 0),
             "top_wait_event": wait or "CPU"}
