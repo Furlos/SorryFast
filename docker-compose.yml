@@ -13,6 +13,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - analyzer-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analyzer_user -d workload_analyzer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   backend:
     build: ./backend
@@ -22,9 +28,16 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - analyzer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   tg-bot:
     build: ./tg_bot
@@ -32,7 +45,8 @@ services:
       BOT_TOKEN: your_telegram_bot_token_here
       API_BASE_URL: http://backend:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - analyzer-network
     restart: unless-stopped
