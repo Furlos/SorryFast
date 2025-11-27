@@ -8,13 +8,13 @@ async def generate_iot_report(db: Database) -> Dict[str, Any]:
         start_wal = await conn.fetchval("SELECT pg_current_wal_lsn()")
         start_time = time.time()
 
-        # Много INSERT операций с правильными полями
+        # Много INSERT операций
         operations = 0
-        for i in range(500):
+        for i in range(3000):
             await conn.execute("""
-                INSERT INTO users (name, surname, email, phone, money, created_at) 
-                VALUES ($1, $2, $3, $4, $5, NOW())
-            """, f"device_{i}", f"sensor_{i}", f"device_{i}@iot.com", f"+7{9000000000 + i}", i * 1.5)
+                INSERT INTO users (name, surname, email, phone, money) 
+                VALUES ($1, $2, $3, $4, $5)
+            """, f"device_{i}", f"sensor_{i}", f"device_{i}@iot.com", f"+7999{1000000 + i}", i * 1.5)
             operations += 1
 
         total_time = time.time() - start_time

@@ -11,19 +11,11 @@ async def generate_oltp_report(db: Database) -> Dict[str, Any]:
         start_temp = await conn.fetchrow("SELECT temp_bytes FROM pg_stat_database WHERE datname = current_database()")
         start_time = time.time()
 
-        # Тяжелые OLTP операции
+        # Много простых OLTP операций
         operations = 0
-        for i in range(200):
-            # Сложный UPDATE с JOIN-like логикой
-            await conn.execute("""
-                WITH random_user AS (
-                    SELECT id FROM users ORDER BY random() LIMIT 1
-                )
-                UPDATE users 
-                SET money = money + (SELECT money * 0.01 FROM users WHERE id = (SELECT id FROM random_user)),
-                    updated_at = NOW()
-                WHERE id = (SELECT id FROM random_user)
-            """)
+        for i in range(5000):
+            await conn.execute(
+                "UPDATE users SET money = money + 1 WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
             operations += 1
 
         total_time = time.time() - start_time
