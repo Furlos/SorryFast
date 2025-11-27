@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from .core.database import db
+from core.database import db
 from routers.models import models_router
 
 
