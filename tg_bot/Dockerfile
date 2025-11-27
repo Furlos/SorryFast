@@ -1,7 +1,7 @@
 FROM python:3.13-alpine AS builder
 WORKDIR /frontend
 RUN pip install --no-cache-dir uv
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml ./
 RUN uv pip compile -o requirements.txt pyproject.toml
 
 FROM python:3.13-alpine
