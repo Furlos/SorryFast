@@ -17,7 +17,7 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql://analyzer_user:analyzer_password@postgres:5432/workload_analyzer
+      POSTGRES_URL: postgresql://analyzer_user:analyzer_password@postgres:5432/workload_analyzer
       API_PORT: 8000
     ports:
       - "8000:8000"
