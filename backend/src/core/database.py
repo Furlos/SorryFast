@@ -17,17 +17,13 @@ class Database:
             return
 
         self.pool = await asyncpg.create_pool(
-            host=settings.pg_host,
-            port=settings.pg_port,
-            user=settings.pg_user,
-            password=settings.pg_password,
-            database=settings.pg_database,
+            dsn=settings.db_url,
             min_size=2,
             max_size=20,
             command_timeout=60,
         )
 
-        await self._ensure_extensions()
+        await self._create_tables()
         print("Подключение к PostgreSQL готово, пул создан")
 
     async def close(self) -> None:
@@ -35,28 +31,27 @@ class Database:
             await self.pool.close()
             print("Пул подключений закрыт")
 
-    async def _ensure_extensions(self) -> None:
-        """Включаем pg_stat_statements и при необходимости прописываем в shared_preload_libraries"""
-        async with self.pool.acquire() as conn:
-            # Просто создаём расширение — оно безопасно, если уже есть
-            await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements;")
+    async def _create_tables(self) -> None:
+        """Создание таблицы users"""
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS users (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            name VARCHAR(100) NOT NULL,
+            surname VARCHAR(100) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            phone VARCHAR(20),
+            money DECIMAL(15,2) DEFAULT 0.00,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
 
-            # Проверяем, есть ли уже pg_stat_statements в shared_preload_libraries
-            row = await conn.fetchrow(
-                "SELECT setting FROM pg_settings WHERE name = 'shared_preload_libraries'"
-            )
+        CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+        CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+        """
 
-            current_libs = row["setting"] if row and row["setting"] else ""
-
-            if "pg_stat_statements" not in current_libs:
-                # Если пусто — просто добавляем, если что-то уже есть — через запятую
-                new_value = "pg_stat_statements" if not current_libs else current_libs + ",pg_stat_statements"
-
-                await conn.execute(f"ALTER SYSTEM SET shared_preload_libraries = '{new_value}';")
-                print("pg_stat_statements добавлен в shared_preload_libraries")
-                print("Для применения нужен рестарт PostgreSQL (на проде — через orchestrator)")
-            else:
-                print("pg_stat_statements уже прописан в shared_preload_libraries")
+        async with self.pool.acquire() as connection:
+            await connection.execute(create_table_query)
+            print("Таблица users создана или уже существует")
 
     @asynccontextmanager
     async def acquire(self) -> AsyncGenerator[asyncpg.Connection, None]:
