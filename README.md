@@ -28,7 +28,7 @@
 
 ## 📊 Презентация проекта
 
-*[📑 Смотреть полную презентацию на Google Slides](https://www.figma.com/slides/a1OY0tuPBMSeg5jRomcOfM/Untitled?node-id=1-87&t=z8d3SaNISpJc5qmD-1)**
+*[📑 Смотреть полную презентацию на Figma](https://www.figma.com/slides/a1OY0tuPBMSeg5jRomcOfM/Untitled?node-id=1-87&t=z8d3SaNISpJc5qmD-1)**
 
 [⬆ Наверх](#vtb-analytics-bot)
 
