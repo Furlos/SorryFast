@@ -48,7 +48,7 @@ app.add_middleware(
 )
 
 # Подключаем роутеры
-app.include_router(models_router, prefix="/api/v1", tags=["profiles"])
+app.include_router(models_router)
 
 
 @app.get("/")
