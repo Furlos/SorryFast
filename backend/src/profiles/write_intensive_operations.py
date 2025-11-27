@@ -10,15 +10,15 @@ async def generate_write_intensive_report(db: Database) -> Dict[str, Any]:
             start_wal = await conn.fetchval("SELECT pg_current_wal_lsn()")
             start_time = time.time()
 
-            # Много INSERT/UPDATE операций
+            # Много INSERT/UPDATE операций в существующую таблицу users
             operations = 0
             for i in range(120):
-                await conn.execute("INSERT INTO audit_log (user_id, action, timestamp) VALUES ($1, $2, now())",
-                                   i % 50, f"action_{i}")
+                await conn.execute("INSERT INTO users (name, email, money, created_at) VALUES ($1, $2, $3, now())",
+                                   f"user_{i}", f"user_{i}@example.com", i * 10)
                 operations += 1
 
                 if i % 3 == 0:
-                    await conn.execute("UPDATE users SET last_activity = now() WHERE id = $1", i % 50)
+                    await conn.execute("UPDATE users SET money = money + 1 WHERE id = $1", i % 50 + 1)
                     operations += 1
 
             total_time = time.time() - start_time
@@ -39,7 +39,7 @@ async def generate_write_intensive_report(db: Database) -> Dict[str, Any]:
                 "active_connections": 28
             }
         }
-    except Exception:
+    except Exception as e:
         return {
             "профиль": "Write-Intensive",
             "метрики": {
@@ -49,5 +49,6 @@ async def generate_write_intensive_report(db: Database) -> Dict[str, Any]:
                 "committed_percent": 94.2,
                 "temp_gb_per_hour": 0.8,
                 "active_connections": 28
-            }
+            },
+            "error": f"Query failed, using default metrics: {str(e)}"
         }

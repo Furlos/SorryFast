@@ -8,10 +8,10 @@ async def generate_read_intensive_report(db: Database) -> Dict[str, Any]:
         async with db.acquire() as conn:
             start_time = time.time()
 
-            # Много SELECT запросов
+            # Много SELECT запросов из существующей таблицы users
             operations = 0
             for i in range(150):
-                await conn.fetchval("SELECT balance FROM accounts WHERE user_id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
+                await conn.fetchval("SELECT money FROM users WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
                 operations += 1
 
             total_time = time.time() - start_time
@@ -28,7 +28,7 @@ async def generate_read_intensive_report(db: Database) -> Dict[str, Any]:
                 "active_connections": 35
             }
         }
-    except Exception:
+    except Exception as e:
         return {
             "профиль": "Read-Intensive",
             "метрики": {
@@ -38,5 +38,6 @@ async def generate_read_intensive_report(db: Database) -> Dict[str, Any]:
                 "committed_percent": 98.5,
                 "temp_gb_per_hour": 0.1,
                 "active_connections": 35
-            }
+            },
+            "error": f"Query failed, using default metrics: {str(e)}"
         }

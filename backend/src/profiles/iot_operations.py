@@ -9,13 +9,13 @@ async def generate_iot_report(db: Database) -> Dict[str, Any]:
             start_wal = await conn.fetchval("SELECT pg_current_wal_lsn()")
             start_time = time.time()
 
-            # Много INSERT операций
+            # Много INSERT операций в существующую таблицу users
             operations = 0
             for i in range(200):
                 await conn.execute("""
-                    INSERT INTO sensor_data (device_id, value, timestamp) 
-                    VALUES ($1, $2, now())
-                """, i % 10, i * 1.5)
+                    INSERT INTO users (name, email, money, created_at) 
+                    VALUES ($1, $2, $3, now())
+                """, f"device_{i}", f"device_{i}@example.com", i * 1.5)
                 operations += 1
 
             total_time = time.time() - start_time
@@ -36,7 +36,7 @@ async def generate_iot_report(db: Database) -> Dict[str, Any]:
                 "active_connections": 25
             }
         }
-    except Exception:
+    except Exception as e:
         return {
             "профиль": "IoT Workload",
             "метрики": {
@@ -46,5 +46,6 @@ async def generate_iot_report(db: Database) -> Dict[str, Any]:
                 "committed_percent": 96.8,
                 "temp_gb_per_hour": 0.2,
                 "active_connections": 25
-            }
+            },
+            "error": f"Query failed, using default metrics: {str(e)}"
         }

@@ -12,12 +12,11 @@ async def generate_olap_report(db: Database) -> Dict[str, Any]:
                 "SELECT temp_bytes FROM pg_stat_database WHERE datname = current_database()")
             start_time = time.time()
 
-            # Тяжелый аналитический запрос
+            # Тяжелый аналитический запрос с существующей таблицей
             await conn.execute("""
-                SELECT COUNT(*), AVG(amount), SUM(amount) 
-                FROM transactions 
-                WHERE created_at > now() - interval '1 month'
-                GROUP BY date_trunc('day', created_at)
+                SELECT COUNT(*), AVG(CAST(money as numeric)), SUM(CAST(money as numeric)) 
+                FROM users 
+                GROUP BY DATE_TRUNC('day', created_at)
             """)
 
             total_time = time.time() - start_time
@@ -39,7 +38,7 @@ async def generate_olap_report(db: Database) -> Dict[str, Any]:
                 "active_connections": 3
             }
         }
-    except Exception:
+    except Exception as e:
         return {
             "профиль": "Analytical OLAP",
             "метрики": {
@@ -49,5 +48,6 @@ async def generate_olap_report(db: Database) -> Dict[str, Any]:
                 "committed_percent": 85.0,
                 "temp_gb_per_hour": 12.3,
                 "active_connections": 2
-            }
+            },
+            "error": f"Query failed, using default metrics: {str(e)}"
         }
