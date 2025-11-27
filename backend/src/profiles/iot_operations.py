@@ -10,7 +10,7 @@ async def generate_iot_report(db: Database) -> Dict[str, Any]:
 
         # Много INSERT операций
         operations = 0
-        for i in range(3000):
+        for i in range(50):
             await conn.execute("""
                 INSERT INTO users (name, surname, email, phone, money) 
                 VALUES ($1, $2, $3, $4, $5)

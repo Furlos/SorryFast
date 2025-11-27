@@ -11,7 +11,7 @@ async def generate_mixed_report(db: Database) -> Dict[str, Any]:
         # Смешанная нагрузка: OLTP + OLAP
         operations = 0
 
-        for i in range(200):
+        for i in range(5):
             # OLTP операции
             await conn.execute(
                 "UPDATE users SET money = money + 1 WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")

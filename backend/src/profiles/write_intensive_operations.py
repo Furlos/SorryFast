@@ -10,7 +10,7 @@ async def generate_write_intensive_report(db: Database) -> Dict[str, Any]:
 
         # Много INSERT/UPDATE операций
         operations = 0
-        for i in range(100):
+        for i in range(5):
             # UPDATE
             await conn.execute("UPDATE users SET money = money * 1.01 WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
             operations += 1

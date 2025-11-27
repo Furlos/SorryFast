@@ -11,7 +11,7 @@ async def generate_olap_report(db: Database) -> Dict[str, Any]:
 
         # Много тяжелых аналитических запросов
         operations = 0
-        for i in range(100):
+        for i in range(5):
             await conn.fetch("""
                 SELECT COUNT(*), AVG(CAST(money as numeric)), SUM(CAST(money as numeric)) 
                 FROM users 

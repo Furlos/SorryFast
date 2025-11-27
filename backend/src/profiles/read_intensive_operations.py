@@ -9,7 +9,7 @@ async def generate_read_intensive_report(db: Database) -> Dict[str, Any]:
 
         # Много SELECT запросов
         operations = 0
-        for i in range(100):
+        for i in range(5):
             await conn.fetchval("SELECT money FROM users WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
             operations += 1
 

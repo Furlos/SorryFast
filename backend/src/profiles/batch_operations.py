@@ -10,7 +10,7 @@ async def generate_batch_report(db: Database) -> Dict[str, Any]:
 
         # Длительные пакетные операции
         operations = 0
-        for i in range(50):
+        for i in range(5):
             await conn.execute("UPDATE users SET money = money * 1.05 WHERE created_at < NOW() - INTERVAL '1 hour'")
             operations += 1
 

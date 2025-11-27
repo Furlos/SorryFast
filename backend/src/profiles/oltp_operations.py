@@ -13,7 +13,7 @@ async def generate_oltp_report(db: Database) -> Dict[str, Any]:
 
         # Много простых OLTP операций
         operations = 0
-        for i in range(500):
+        for i in range(5):
             await conn.execute(
                 "UPDATE users SET money = money + 1 WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
             operations += 1

@@ -10,7 +10,7 @@ async def generate_web_report(db: Database) -> Dict[str, Any]:
 
         # Короткие транзакции с высокой параллельностью
         operations = 0
-        for i in range(60):
+        for i in range(5):
             # Быстрые SELECT
             await conn.fetch(
                 "SELECT name, surname, email, money FROM users WHERE id = (SELECT id FROM users ORDER BY random() LIMIT 1)")
