@@ -72,16 +72,19 @@ class Database:
 
             # Если данных мало, заполняем
             if count < 100000:
-                # Просто создаем минимальные данные для тестов
+                # Удаляем старые данные чтобы избежать конфликтов
+                await connection.execute("DELETE FROM users")
+                print("Старые данные удалены")
+
                 print("Создаем тестовые данные...")
 
-                # Быстрое заполнение 1000 записей для тестов
+                # Быстрое заполнение 1000 уникальных записей
                 batch_data = []
-                for i in range(1000):
+                for i in range(100000):
                     name = f"User{i}"
                     surname = f"Test{i}"
-                    email = f"user{i}@test.com"
-                    phone = f"+7999{str(i).zfill(7)}"
+                    email = f"user{i}@test.com"  # Уникальные email
+                    phone = f"+7999{str(i).zfill(7)}"  # Уникальные телефоны
                     money = round(random.uniform(0, 10000), 2)
 
                     batch_data.append((name, surname, email, phone, money))
