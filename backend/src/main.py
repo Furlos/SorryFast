@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.database import db
+from core.metrics import collect_metrics
+
 from routers.models import models_router
 
 
@@ -37,6 +39,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+@app.get("/debug/metrics")
+async def debug_metrics():
+    metrics = await collect_metrics()
+    return {
+        "время": datetime.now().strftime("%H:%M:%S"),
+        "метрики": metrics,
+        "статус": "работает"
+    }
 
 # CORS middleware
 app.add_middleware(
