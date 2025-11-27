@@ -1,10 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
-from keyboards import back_to_main_kb
-from api import (
+from handlers.profiles.keyboards import back_to_main_kb
+from handlers.profiles.api import (
     ProfileAPIClient
 )
-from ...config import backend_link
+from config import backend_link
 api = ProfileAPIClient(backend_link)
 profile_router = Router()
 
@@ -17,7 +17,7 @@ async def handle_oltp(callback: CallbackQuery):
 ⚡ **OLTP (Online Transaction Processing)**
 
 
-**Данные: {api.oltp_work()}**
+**Данные: {await api.oltp_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 85-95% (короткие транзакции)
@@ -62,7 +62,7 @@ async def handle_olap(callback: CallbackQuery):
     description = f"""
 📈 **OLAP (Online Analytical Processing)**
 
-**Данные: {api.olap_work()}**
+**Данные: {await api.olap_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 40-50% (длительные операции)
@@ -109,7 +109,7 @@ async def handle_mixed(callback: CallbackQuery):
     description = f"""
 🔄 **Смешанный (Mixed OLTP/OLAP)**
 
-**Данные: {api.mixed_work()}**
+**Данные: {await api.mixed_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 60-70%
@@ -153,7 +153,7 @@ async def handle_iot(callback: CallbackQuery):
     description = f"""
 🌐 **IoT/Телеметрия**
 
-**Данные: {api.iot_work()}**
+**Данные: {await api.iot_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 90-95% (массовая запись)
@@ -198,7 +198,7 @@ async def handle_read_intensive(callback: CallbackQuery):
     description = f"""
 📖 **Read-Intensive (Чтение)**
 
-**Данные: {api.read_intensive_work()}**
+**Данные: {await api.read_intensive_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 70-80% (операции чтения)
@@ -242,7 +242,7 @@ async def handle_write_intensive(callback: CallbackQuery):
     description = f"""
 ✍️ **Write-Intensive (Запись)**
 
-**Данные: {api.write_intensive_work()}**
+**Данные: {await api.write_intensive_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 85-95% (операции записи)
@@ -287,7 +287,7 @@ async def handle_web_service(callback: CallbackQuery):
     description = f"""
 💻 **Интерактивный веб-сервис**
 
-**Данные: {api.web_work()}**
+**Данные: {await api.web_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 80-90% (высокая конкурентность)
@@ -332,7 +332,7 @@ async def handle_batch(callback: CallbackQuery):
     description = f"""
 ⚙️ **Пакетная обработка (Batch Processing)**
 
-**Данные: {api.batch_work()}**
+**Данные: {await api.batch_work()}**
 
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 50-70% (длительные операции)

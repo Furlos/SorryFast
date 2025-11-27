@@ -14,7 +14,7 @@ COPY uv.lock* ./
 RUN uv sync --frozen --no-cache
 
 # Копируем код
-COPY . .
+COPY ./src .
 
 # Запускаем
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

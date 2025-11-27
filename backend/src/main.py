@@ -1,32 +1,44 @@
-from __future__ import annotations
-
+import asyncio
+import time
 from contextlib import asynccontextmanager
-from datetime import datetime
 
 from fastapi import FastAPI
-from fastapi import Query
+from fastapi.middleware.cors import CORSMiddleware
 
-from .core.database import db
-from .core.fake_metrics import generate_fake_metrics
-from .core.metrics import collect_metrics
-from .models.profile import PROFILES
+from core.database import db
+from core.metrics import collect_metrics
+
+from routers.models import models_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Lifespan контекст для управления состоянием приложения"""
     print("Запуск приложения...")
-    await db.create_pool()
-    print("Пул подключений готов, pg_stat_statements включен")
+
+    # Ждем 10 секунд перед подключением к PostgreSQL
+    print("⏳ Ожидание запуска PostgreSQL...")
+    await asyncio.sleep(10)
+
+    try:
+        await db.create_pool()
+        print("✅ Подключение к PostgreSQL успешно установлено")
+    except Exception as e:
+        print(f"❌ Ошибка подключения к PostgreSQL: {e}")
+        raise
+
+    print("✅ Пул подключений готов")
     yield
-
-    print("Остановка приложения...")
     await db.close()
-    print("Все подключения закрыты")
+    print("✅ Приложение завершено")
 
 
-app = FastAPI(title="VTB Load Profile Analyzer", lifespan=lifespan)
-
-
+app = FastAPI(
+    title="SorryFast API",
+    description="API для анализа профилей нагрузки PostgreSQL",
+    version="1.0.0",
+    lifespan=lifespan
+)
 @app.get("/debug/metrics")
 async def debug_metrics():
     metrics = await collect_metrics()
@@ -36,45 +48,39 @@ async def debug_metrics():
         "статус": "работает"
     }
 
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/profile/{base_name}")
-async def current_profile(db: str = Query("prodbill01", description="Имя базы")):
-    # Находим профиль по имени базы
-    demo_map = {
-        "prodbill01": "Financial-Safe OLTP",
-        "analytics01": "Analytical OLAP",
-        "iot-sensors": "Write-heavy IoT & Telemetry",
-        "mobile-api": "High-Concurrency Web/API",
-        "billing-night": "Batch/ETL & Night Loads",
-        "mixed01": "Mixed OLTP + Periodic Analytics",
-        "cache01": "Read-Heavy / In-Memory Cache",
-        "default": "Classic OLTP"
-    }
-
-    profile_name = demo_map.get(db.split()[0], demo_map["default"])
-    profile = next(p for p in PROFILES if p.name == profile_name)
-
-    # Генерируем ЖИВЫЕ фейковые метрики, каждый запрос новые
-    metrics = generate_fake_metrics(profile_name)
-
-    return {
-        "база": db,
-        "профиль": profile.name,
-        "совпадение": "99%",
-        "причины": [
-            f"DB Time Committed: {metrics['committed_percent']}%",
-            f"TPS: {metrics['tps']:,}",
-            f"WAL: {metrics['wal_mb_per_sec']} МБ/с",
-            f"Temp files: {metrics['temp_gb_per_hour']} ГБ/ч"
-        ],
-        "рекомендация": "Включить Financial-Safe режим" if "Financial" in profile.name else "Оптимально",
-        "метрики": metrics
-    }
+# Подключаем роутеры
+app.include_router(models_router)
 
 
-@app.get("/demo/profile")
-async def demo_profile():
-    import random
-    db_names = ["prodbill01", "analytics01", "iot-sensors", "mobile-api", "billing-night"]
-    db = random.choice(db_names)
-    return await current_profile(db)
+@app.get("/")
+async def root():
+    return {"message": "SorryFast API работает!", "status": "ok"}
+
+
+@app.get("/health")
+async def health_check():
+    """Проверка здоровья приложения"""
+    try:
+        user_count = await db.get_user_count()
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "users_count": user_count,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": str(e),
+            "timestamp": time.time()
+        }

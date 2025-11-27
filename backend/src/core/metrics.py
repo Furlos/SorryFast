@@ -29,7 +29,7 @@ async def collect_metrics() -> CurrentMetrics:
                 "tps": 0.0,
                 "wal_mb_per_sec": 0.0,
                 "temp_gb_per_hour": 0.0,
-                "committed_percent": 0.0,
+                "commited_percent": 0.0,
                 "active_connections": 0,
                 "top_wait_event": "нет данных"
             }
@@ -64,6 +64,6 @@ async def collect_metrics() -> CurrentMetrics:
             "tps": round(tps, 1),
             "wal_mb_per_sec": round(wal_mb_per_sec, 2),
             "temp_gb_per_hour": round(temp_gb_per_hour, 2),
-            "committed_percent": committed_percent,
+            "commited_percent": committed_percent,
             "active_connections": int(connections or 0),
             "top_wait_event": wait or "CPU"}

@@ -1,21 +1,16 @@
 from pydantic_settings import BaseSettings
 from typing import Literal
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class Settings(BaseSettings):
-    pg_host: str
-    pg_port: int = 5432
-    pg_user: str
-    pg_password: str
-    pg_database: str
+    db_url: str = os.getenv("POSTGRES_URL")  # Вот так добавить
 
-    enviroment: Literal["development", "staging", "production"] = "development"
-
-
-    class Config:
-        env_file = "../../.env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    environment: Literal["development", "staging", "production"] = "development"
 
 
 settings = Settings()

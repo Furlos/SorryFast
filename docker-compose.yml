@@ -8,16 +8,22 @@ services:
       POSTGRES_USER: analyzer_user
       POSTGRES_PASSWORD: analyzer_password
     ports:
-      - "5432:5432"
+      - "11821:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - analyzer-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analyzer_user -d workload_analyzer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql://analyzer_user:analyzer_password@postgres:5432/workload_analyzer
+      POSTGRES_URL: postgresql://analyzer_user:analyzer_password@postgres:5432/workload_analyzer
       API_PORT: 8000
     ports:
       - "8000:8000"
@@ -25,12 +31,13 @@ services:
       - postgres
     networks:
       - analyzer-network
+    # Убрал healthcheck временно
 
   tg-bot:
-    build: ./tg-bot
+    build: ./tg_bot
     environment:
       BOT_TOKEN: your_telegram_bot_token_here
-      API_BASE_URL: http://backend:8000/api
+      API_BASE_URL: http://backend:8000
     depends_on:
       - backend
     networks:
