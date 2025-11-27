@@ -1,4 +1,4 @@
-# VTB Analytics Bot
+# SorryFast
 
 ![Deploy Status](https://img.shields.io/badge/deploy-success-brightgreen)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
@@ -118,7 +118,9 @@ graph TB
 ---
 
 ## 🎪 Демо
--
+
+**Telegram бот:** [@SorryFast_bot](https://t.me/SorryFast_bot)
+
 [⬆ Наверх](#vtb-analytics-bot)
 
 ---
