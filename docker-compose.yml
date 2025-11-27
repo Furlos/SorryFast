@@ -27,7 +27,7 @@ services:
       - analyzer-network
 
   tg-bot:
-    build: ./tg-bot
+    build: ./tg_bot
     environment:
       BOT_TOKEN: your_telegram_bot_token_here
       API_BASE_URL: http://backend:8000/api
