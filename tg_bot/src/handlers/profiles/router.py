@@ -1,10 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
-from keyboards import back_to_main_kb
-from api import (
+from handlers.profiles.keyboards import back_to_main_kb
+from handlers.profiles.api import (
     ProfileAPIClient
 )
-from ...config import backend_link
+from config import backend_link
 api = ProfileAPIClient(backend_link)
 profile_router = Router()
 
