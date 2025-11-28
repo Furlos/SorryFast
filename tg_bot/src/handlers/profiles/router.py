@@ -1,24 +1,64 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from handlers.profiles.keyboards import back_to_main_kb
-from handlers.profiles.api import (
-    ProfileAPIClient
-)
+from handlers.profiles.api import ProfileAPIClient
 from config import backend_link
+
 api = ProfileAPIClient(backend_link)
 profile_router = Router()
 
 
-@profile_router.callback_query(F.data == "workload_oltp")
-async def handle_oltp(callback: CallbackQuery):
-    """Обработчик для OLTP"""
+def format_workload_data(workload_type: str, data: dict) -> str:
+    """Форматирует данные workload в красивый текст"""
 
-    description = f"""
-⚡ **OLTP (Online Transaction Processing)**
+    icons = {
+        "oltp": "⚡",
+        "olap": "📈",
+        "mixed": "🔄",
+        "iot": "🌐",
+        "read_intensive": "📖",
+        "write_intensive": "✍️",
+        "web_service": "💻",
+        "batch": "⚙️"
+    }
 
+    titles = {
+        "oltp": "OLTP (Online Transaction Processing)",
+        "olap": "OLAP (Online Analytical Processing)",
+        "mixed": "Смешанный (Mixed OLTP/OLAP)",
+        "iot": "IoT/Телеметрия",
+        "read_intensive": "Read-Intensive (Чтение)",
+        "write_intensive": "Write-Intensive (Запись)",
+        "web_service": "Интерактивный веб-сервис",
+        "batch": "Пакетная обработка (Batch Processing)"
+    }
 
-**Данные: {await api.oltp_work()}**
+    icon = icons.get(workload_type, "📊")
+    title = titles.get(workload_type, "Workload")
 
+    # Форматируем метрики если они есть
+    metrics_text = ""
+    if data and isinstance(data, dict) and data.get("метрики"):
+        metrics = data["метрики"]
+        metrics_text = "📊 **Текущие метрики:**\n"
+        for key, value in metrics.items():
+            if key == "tps":
+                metrics_text += f"• TPS: **{value}**\n"
+            elif key == "latency_ms":
+                metrics_text += f"• Задержка: **{value} ms**\n"
+            elif key == "throughput_mb_sec":
+                metrics_text += f"• Пропускная способность: **{value} MB/s**\n"
+            elif key == "active_connections":
+                metrics_text += f"• Активные подключения: **{value}**\n"
+            elif key == "committed_percent":
+                metrics_text += f"• Committed: **{value}%**\n"
+            elif key == "temp_gb_per_hour":
+                metrics_text += f"• Temp файлы: **{value} GB/час**\n"
+
+    # Базовые описания для каждого типа workload
+    descriptions = {
+        "oltp": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 85-95% (короткие транзакции)
 • DB Time Committed: 70-80%
@@ -41,29 +81,9 @@ async def handle_oltp(callback: CallbackQuery):
 • Биржевые торги
 • Системы бронирования
 • Онлайн-платежи
-
-**🔄 Переходные состояния:**
-• OLTP → Mixed: при TPS > 2000 + аналитические запросы
-• OLTP → OLAP: при снятии OLTP нагрузки + работающие тяжелые запросы
-
-**📈 Экспериментальные данные (pgbench TPC-B):**
-• TPS: 1500-2000
-• Latency: 2-5ms
-• Throughput: 1.5M операций/час
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_olap")
-async def handle_olap(callback: CallbackQuery):
-    """Обработчик для OLAP"""
-    description = f"""
-📈 **OLAP (Online Analytical Processing)**
-
-**Данные: {await api.olap_work()}**
-
+""",
+        "olap": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 40-50% (длительные операции)
 • DB Time Committed: 30-40%
@@ -86,31 +106,9 @@ async def handle_olap(callback: CallbackQuery):
 • Data Mining и аналитика
 • Годовые отчеты
 • Бизнес-аналитика
-
-**🔄 Переходные состояния:**
-• OLAP → Mixed: при параллельном запуске OLTP нагрузки
-• OLAP → OLTP: при преобладании коротких транзакций
-
-**📈 Экспериментальные данные:**
-• Время выполнения: 10-30s
-• CPU utilization: 80-95%
-• Memory usage: 60-80%
-• Ускорение с parallel query: 3-4x
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_mixed")
-async def handle_mixed(callback: CallbackQuery):
-    """Обработчик для смешанной нагрузки"""
-
-    description = f"""
-🔄 **Смешанный (Mixed OLTP/OLAP)**
-
-**Данные: {await api.mixed_work()}**
-
+""",
+        "mixed": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 60-70%
 • DB Time Committed: 50-60%
@@ -130,31 +128,9 @@ async def handle_mixed(callback: CallbackQuery):
 • CRM системы
 • SaaS приложения
 • Финансовые платформы
-
-**🔄 Балансировка нагрузок:**
-• Горячие/холодные данные
-• Read replicas для аналитики
-• Resource groups для изоляции
-• Connection pooling
-
-**📈 Производительность:**
-• 40-60% от пиковой производительности OLTP
-• 2-3x ускорение vs однопоточный режим
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_iot")
-async def handle_iot(callback: CallbackQuery):
-    """Обработчик для IoT/Телеметрии"""
-
-    description = f"""
-🌐 **IoT/Телеметрия**
-
-**Данные: {await api.iot_work()}**
-
+""",
+        "iot": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 90-95% (массовая запись)
 • DB Time Committed: 80-90%
@@ -174,32 +150,9 @@ async def handle_iot(callback: CallbackQuery):
 • Мониторинг оборудования
 • Промышленная телеметрия
 • Системы сбора метрик
-
-**💡 Специализированные решения:**
-• TimescaleDB для временных рядов
-• BRIN индексы вместо B-tree
-• UNLOGGED таблицы для временных данных
-• Compression policies
-
-**📈 Производительность:**
-• Пропускная способность: 10K+ записей/сек
-• Эффективное сжатие: 70-90%
-• Оптимизировано для массовых операций
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_read_intensive")
-async def handle_read_intensive(callback: CallbackQuery):
-    """Обработчик для Read-Intensive"""
-
-    description = f"""
-📖 **Read-Intensive (Чтение)**
-
-**Данные: {await api.read_intensive_work()}**
-
+""",
+        "read_intensive": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 70-80% (операции чтения)
 • DB Time Committed: 60-70%
@@ -219,31 +172,9 @@ async def handle_read_intensive(callback: CallbackQuery):
 • Справочники и энциклопедии
 • Блоги и медиа-порталы
 • Системы документооборота
-
-**🚀 Стратегии оптимизации:**
-• Активные индексы (B-tree, GIN, GIST)
-• Read replicas для масштабирования
-• Query cache и кэширование
-• Covering индексы
-
-**📈 Производительность:**
-• Быстрое время отклика: < 200ms
-• Эффективное использование кэша
-• Легко масштабируется репликацией
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_write_intensive")
-async def handle_write_intensive(callback: CallbackQuery):
-    """Обработчик для Write-Intensive"""
-    description = f"""
-✍️ **Write-Intensive (Запись)**
-
-**Данные: {await api.write_intensive_work()}**
-
+""",
+        "write_intensive": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 85-95% (операции записи)
 • DB Time Committed: 75-85%
@@ -263,32 +194,9 @@ async def handle_write_intensive(callback: CallbackQuery):
 • Сбор метрик и мониторинг
 • Очереди сообщений
 • Системы обработки событий
-
-**⚡ Оптимизация записи:**
-• Минимизация индексов
-• Batch INSERT для группировки
-• UNLOGGED таблицы
-• Tablespaces на быстрых дисках
-
-**📈 Производительность:**
-• Высокая пропускная способность записи
-• Эффективное использование WAL
-• Оптимизировано для последовательных операций
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_web_service")
-async def handle_web_service(callback: CallbackQuery):
-    """Обработчик для интерактивного веб-сервиса"""
-
-    description = f"""
-💻 **Интерактивный веб-сервис**
-
-**Данные: {await api.web_work()}**
-
+""",
+        "web_service": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 80-90% (высокая конкурентность)
 • DB Time Committed: 70-80%
@@ -308,32 +216,9 @@ async def handle_web_service(callback: CallbackQuery):
 • SaaS приложения
 • Онлайн-маркетплейсы
 • CRM и ERP системы
-
-**🔗 Управление подключениями:**
-• PgBouncer для connection pooling
-• READ COMMITTED уровень изоляции
-• Балансировка нагрузки
-• Мониторинг "горячих" строк
-
-**📈 Производительность:**
-• Быстрое время отклика: < 500ms
-• Хорошая масштабируемость по подключениям
-• Поддержка высокой доступности
-"""
-
-    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
-    await callback.answer()
-
-
-@profile_router.callback_query(F.data == "workload_batch")
-async def handle_batch(callback: CallbackQuery):
-    """Обработчик для пакетной обработки"""
-
-    description = f"""
-⚙️ **Пакетная обработка (Batch Processing)**
-
-**Данные: {await api.batch_work()}**
-
+""",
+        "batch": f"""
+{metrics_text}
 **📊 Метрики DB Time и производительности:**
 • DB Time ASH: 50-70% (длительные операции)
 • DB Time Committed: 40-60%
@@ -353,19 +238,79 @@ async def handle_batch(callback: CallbackQuery):
 • Ночные расчеты и отчетность
 • Массовые обновления данных
 • Генерация аналитических витрин
-
-**🕒 Стратегии выполнения:**
-• Chunk processing для больших объемов
-• Parallel execution
-• Staging tables
-• Выполнение в непиковое время
-
-**📈 Производительность:**
-• Эффективная обработка больших объемов
-• Оптимальное использование ресурсов
-• Возможность сложных преобразований
-• Пакетная оптимизация операций
 """
+    }
 
+    return f"{icon} **{title}**\n\n{descriptions.get(workload_type, '')}"
+
+
+@profile_router.callback_query(F.data == "workload_oltp")
+async def handle_oltp(callback: CallbackQuery):
+    """Обработчик для OLTP"""
+    data = await api.oltp_work()
+    description = format_workload_data("oltp", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_olap")
+async def handle_olap(callback: CallbackQuery):
+    """Обработчик для OLAP"""
+    data = await api.olap_work()
+    description = format_workload_data("olap", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_mixed")
+async def handle_mixed(callback: CallbackQuery):
+    """Обработчик для смешанной нагрузки"""
+    data = await api.mixed_work()
+    description = format_workload_data("mixed", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_iot")
+async def handle_iot(callback: CallbackQuery):
+    """Обработчик для IoT/Телеметрии"""
+    data = await api.iot_work()
+    description = format_workload_data("iot", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_read_intensive")
+async def handle_read_intensive(callback: CallbackQuery):
+    """Обработчик для Read-Intensive"""
+    data = await api.read_intensive_work()
+    description = format_workload_data("read_intensive", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_write_intensive")
+async def handle_write_intensive(callback: CallbackQuery):
+    """Обработчик для Write-Intensive"""
+    data = await api.write_intensive_work()
+    description = format_workload_data("write_intensive", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_web_service")
+async def handle_web_service(callback: CallbackQuery):
+    """Обработчик для интерактивного веб-сервиса"""
+    data = await api.web_work()
+    description = format_workload_data("web_service", data)
+    await callback.message.edit_text(description, reply_markup=back_to_main_kb())
+    await callback.answer()
+
+
+@profile_router.callback_query(F.data == "workload_batch")
+async def handle_batch(callback: CallbackQuery):
+    """Обработчик для пакетной обработки"""
+    data = await api.batch_work()
+    description = format_workload_data("batch", data)
     await callback.message.edit_text(description, reply_markup=back_to_main_kb())
     await callback.answer()
